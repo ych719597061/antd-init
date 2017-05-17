@@ -4,6 +4,7 @@ var vfs = require('vinyl-fs');
 var fs = require('fs');
 var through = require('through2');
 var path = require('path');
+var inquirer = require('inquirer');
 var join = path.join;
 var basename = path.basename;
 
@@ -13,17 +14,21 @@ if (process.argv.length === 3 &&
   return;
 }
 
-var cwd = join(__dirname, '../boilerplate');
-var dest = process.cwd();
+init('demo');
 
-vfs.src('**/*', {cwd: cwd, cwdbase: true, dot: true})
-  .pipe(template(dest))
-  .pipe(vfs.dest(dest))
-  .on('end', function() {
-    fs.renameSync(path.join(dest,'gitignore'),path.join(dest,'.gitignore'));
-    require('../lib/install');
-  })
-  .resume();
+function init(type) {
+  var cwd = join(__dirname, '../boilerplates', type);
+  var dest = process.cwd();
+
+  vfs.src(['**/*', '!node_modules/**/*'], {cwd: cwd, cwdbase: true, dot: true})
+    .pipe(template(dest))
+    .pipe(vfs.dest(dest))
+    .on('end', function() {
+      fs.renameSync(path.join(dest,'gitignore'),path.join(dest,'.gitignore'));
+      require('../lib/install');
+    })
+    .resume();
+}
 
 function template(dest) {
   return through.obj(function (file, enc, cb) {
